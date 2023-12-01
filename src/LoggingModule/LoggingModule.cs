@@ -92,7 +92,7 @@ namespace SyslogLogging
             int serverPort,
             bool enableConsole = true)
         {
-            if (String.IsNullOrEmpty(serverIp)) throw new ArgumentNullException(nameof(serverIp));
+            if (string.IsNullOrEmpty(serverIp)) throw new ArgumentNullException(nameof(serverIp));
             if (serverPort < 0) throw new ArgumentException("Server port must be zero or greater.");
 
             _Servers = new List<SyslogServer>();
@@ -132,7 +132,7 @@ namespace SyslogLogging
             FileLoggingMode fileLoggingMode = FileLoggingMode.SingleLogFile,
             bool enableConsole = true)
         {
-            if (String.IsNullOrEmpty(filename) && !enableConsole) throw new ArgumentException("Either a filename must be specified or console logging must be enabled.");
+            if (string.IsNullOrEmpty(filename) && !enableConsole) throw new ArgumentException("Either a filename must be specified or console logging must be enabled.");
 
             _Settings.FileLogging = fileLoggingMode;
             _Settings.LogFilename = filename;
@@ -157,70 +157,63 @@ namespace SyslogLogging
         /// Send a log message using 'Debug' severity.
         /// </summary>
         /// <param name="msg">Message to send.</param>
-        public virtual void Debug(string msg)
+        public virtual void Debug(string format, params object[] args)
         {
-            if (String.IsNullOrEmpty(msg)) return;
-            Log(Severity.Debug, msg);
+            Log(Severity.Debug, format, args);
         }
 
         /// <summary>
         /// Send a log message using 'Info' severity.
         /// </summary>
         /// <param name="msg">Message to send.</param>
-        public virtual void Info(string msg)
+        public virtual void Info(string format, params object[] args)
         {
-            if (String.IsNullOrEmpty(msg)) return;
-            Log(Severity.Info, msg); 
+            Log(Severity.Info, format, args);
         }
 
         /// <summary>
         /// Send a log message using 'Warn' severity.
         /// </summary>
         /// <param name="msg">Message to send.</param>
-        public virtual void Warn(string msg)
+        public virtual void Warn(string format, params object[] args)
         {
-            if (String.IsNullOrEmpty(msg)) return;
-            Log(Severity.Warn, msg);
+            Log(Severity.Warn, format, args);
         }
 
         /// <summary>
         /// Send a log message using 'Error' severity.
         /// </summary>
         /// <param name="msg">Message to send.</param>
-        public virtual void Error(string msg)
+        public virtual void Error(string format, params object[] args)
         {
-            if (String.IsNullOrEmpty(msg)) return;
-            Log(Severity.Error, msg);
+            Log(Severity.Error,format, args);
         }
 
         /// <summary>
         /// Send a log message using 'Alert' severity.
         /// </summary>
         /// <param name="msg">Message to send.</param>
-        public virtual void Alert(string msg)
+        public virtual void Alert(string format, params object[] args)
         {
-            if (String.IsNullOrEmpty(msg)) return;
-            Log(Severity.Alert, msg);
+            Log(Severity.Alert,format, args);
         }
 
         /// <summary>
         /// Send a log message using 'Critical' severity.
         /// </summary>
         /// <param name="msg">Message to send.</param>
-        public virtual void Critical(string msg)
+        public virtual void Critical(string format, params object[] args)
         {
-            if (String.IsNullOrEmpty(msg)) return;
-            Log(Severity.Critical, msg);
+            Log(Severity.Critical, format, args);
         }
 
         /// <summary>
         /// Send a log message using 'Emergency' severity.
         /// </summary>
         /// <param name="msg">Message to send.</param>
-        public virtual void Emergency(string msg)
+        public virtual void Emergency(string format, params object[] args)
         {
-            if (String.IsNullOrEmpty(msg)) return;
-            Log(Severity.Emergency, msg);
+            Log(Severity.Emergency, format, args);
         }
          
         /// <summary>
@@ -240,8 +233,8 @@ namespace SyslogLogging
             string message =
                 Environment.NewLine +
                 "--- Exception details ---" + Environment.NewLine +
-                (!String.IsNullOrEmpty(module) ? "  Module     : " + module + Environment.NewLine : "") +
-                (!String.IsNullOrEmpty(method) ? "  Method     : " + method + Environment.NewLine : "") +
+                (!string.IsNullOrEmpty(module) ? "  Module     : " + module + Environment.NewLine : "") +
+                (!string.IsNullOrEmpty(method) ? "  Method     : " + method + Environment.NewLine : "") +
                 "  Type       : " + e.GetType().ToString() + Environment.NewLine;
 
             if (e.Data != null && e.Data.Count > 0)
@@ -301,12 +294,14 @@ namespace SyslogLogging
         /// </summary>
         /// <param name="sev">Severity of the message.</param>
         /// <param name="msg">Message to send.</param>
-        public virtual void Log(Severity sev, string msg)
+        public virtual void Log(Severity sev, string format, params object[] args)
         {
-            if (String.IsNullOrEmpty(msg)) return;
+            if (string.IsNullOrEmpty(format)) return;
             if (sev < _Settings.MinimumSeverity) return;
 
-            string header = "";
+            string msg = string.Format(format, args);
+
+
             string currMsg = "";
             string remainder = "";
 
@@ -320,7 +315,7 @@ namespace SyslogLogging
                 currMsg = msg;
             }
             
-            header = _Settings.HeaderFormat;
+            var header = _Settings.HeaderFormat;
             if (header.Contains("{ts}")) 
                 header = header.Replace("{ts}", DateTime.Now.ToUniversalTime().ToString(_Settings.TimestampFormat));
             if (header.Contains("{host}")) 
@@ -337,7 +332,7 @@ namespace SyslogLogging
                 SendConsole(sev, message);
             }
 
-            if (!String.IsNullOrEmpty(_Settings.LogFilename) && _Settings.FileLogging != FileLoggingMode.Disabled)
+            if (!string.IsNullOrEmpty(_Settings.LogFilename) && _Settings.FileLogging != FileLoggingMode.Disabled)
             {
                 SendFile(sev, message);
             }
@@ -348,7 +343,7 @@ namespace SyslogLogging
                 SendServers(servers, message);
             }
              
-            if (!String.IsNullOrEmpty(remainder))
+            if (!string.IsNullOrEmpty(remainder))
             {
                 Log(sev, remainder);
             }
@@ -379,7 +374,7 @@ namespace SyslogLogging
 
         private void SendConsole(Severity sev, string msg)
         {
-            if (String.IsNullOrEmpty(msg)) return;
+            if (string.IsNullOrEmpty(msg)) return;
             if (!_Settings.EnableConsole) return;
             if (_Settings.EnableColors)
             {
@@ -433,8 +428,8 @@ namespace SyslogLogging
 
         private void SendFile(Severity sev, string msg)
         {
-            if (String.IsNullOrEmpty(msg)) return;
-            if (String.IsNullOrEmpty(_Settings.LogFilename)) return;
+            if (string.IsNullOrEmpty(msg)) return;
+            if (string.IsNullOrEmpty(_Settings.LogFilename)) return;
 
             switch (_Settings.FileLogging)
             {
@@ -460,7 +455,7 @@ namespace SyslogLogging
 
         private void SendServers(List<SyslogServer> servers, string msg)
         {
-            if (String.IsNullOrEmpty(msg)) return;
+            if (string.IsNullOrEmpty(msg)) return;
             byte[] data = Encoding.UTF8.GetBytes(msg);
 
             foreach (SyslogServer server in servers)
